@@ -25,9 +25,15 @@ end
 
 RSpec::Matchers.define :have_a_version_with do |attributes|
   # check if the model has a version with the specified attributes
-  match do |billing_request|
-    mathing_version = billing_request.versions.select do |version|
-      (HashWithIndifferentAccess.new(attributes).to_a - version.object.to_a).empty?
+  match do |actual|
+    mathing_version = actual.versions.select do |version|
+      object = []
+      if PaperTrail.serializer == PaperTrail::Serializers::YAML
+        object = ::YAML.load version.object if version.object
+      else
+        object = version.object
+      end
+      (HashWithIndifferentAccess.new(attributes).to_a - object.to_a).empty?
     end
     mathing_version.present?
   end
